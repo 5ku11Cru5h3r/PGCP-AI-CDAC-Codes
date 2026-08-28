@@ -1,0 +1,7 @@
+def main():
+    num=int(input("Enter the number:"))
+    sum=0
+    sum+=num*(num+1)
+    natural_sum=sum//2
+    print(natural_sum)
+main()    
