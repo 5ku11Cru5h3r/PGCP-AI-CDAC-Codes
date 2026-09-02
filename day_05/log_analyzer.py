@@ -1,5 +1,41 @@
+import re
 def analyze_server_logs(logs_text):
-    pattern_1 = r"^(?P<ipaddress>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) - - (?P<timestamp>\[[0-9]{1,2}\/[A-Za-z]{3,3}\/[0-9]{4,4}\:[0-9]{2,2}\:[0-9]{2,2}\:[0-9]{2,2}\]) \"(?P<method_name>(GET|POST|PUT|DELETE)) (?P<directory>\/[a-z.]+) (?P<proto>[A-Z0-9\/\.]+)\" (?P<status>[0-9]{3,3}) (?P<bytes>[0-9]{1,})$"
+   # pattern = re.compile(r"^(?P<ipaddress>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) - - (?P<timestamp>\[[0-9]{1,2}\/[A-Za-z]{3,3}\/[0-9]{4,4}\:[0-9]{2,2}\:[0-9]{2,2}\:[0-9]{2,2}\]) \"(?P<method_name>(GET|POST|PUT|DELETE)) (?P<directory>\/[a-z.]+) (?P<proto>[A-Z0-9\/\.]+)\" (?P<status>[0-9]{3,3}) (?P<bytes>[0-9]{1,})$"
+    pattern = re.compile(
+        r'^(?P<ip>\d{1,3}(?:\.\d{1,3}){3})'
+        r' - - '
+        r'\[(?P<time>[^\]]+)\]'
+        r' "(?P<method>GET|POST|PUT|DELETE)'
+        r' (?P<resource>\S+)'
+        r' HTTP/\d(?:\.\d)?"'
+        r' (?P<status>\d+)'
+        r' (?P<bytes>\d+)$'
+    )
+    
+    results=[]
+
+    for line in logs_text.splitlines():
+        match=pattern.match(line)
+        if  not match:
+            print(f"Warning: Could not parse line: '{line}'. Skipping.")
+            continue
+        data=match.groupdict()
+
+        if data["ip"].startswith("192.168.") or data["ip"].startswith("10. "):
+            continue
+        results.append({
+            "ip":data["ip"],
+            "time":data["time"],
+            "method":data["method"],
+            "resources":data["resource"],
+            "status":data["status"],
+            "bytes":data["bytes"]
+                    })
+        return results
+
+
+
+
 
 
 def main():
@@ -8,6 +44,8 @@ def main():
 Corrupted log entry here
 10.0.0.12 - - [28/Aug/2026:10:15:00] "POST /submit_data HTTP/1.1" 403 512
 172.16.0.4 - - [28/Aug/2026:10:20:00] "POST /login HTTP/1.1" 401 256"""
+    result=analyze_server_logs(log_data)
+    print(result)
 
 
 main()
